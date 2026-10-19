@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>LOB Figure Maker</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:#243631;background:#f4f6f4;font-size:14px;--green:#19644d;--border:#dce4df}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer;background:#fff;border:1px solid var(--border);border-radius:8px;padding:9px 13px;color:inherit;font-weight:600}button:hover{background:#eff5f1;border-color:#a7bdb1}button:disabled{opacity:.4;cursor:not-allowed}button.primary{background:var(--green);color:white;border-color:var(--green)}button.primary:hover{background:#114c3a}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #76bca5;outline-offset:2px}
+header{padding:26px 34px 23px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:white;gap:20px}h1{font-size:24px;letter-spacing:-.8px;margin:0;font-weight:750}.brand{display:flex;align-items:center;gap:14px}.mark{display:flex;gap:3px;align-items:center;width:40px;height:40px;padding:8px;background:#e8f3ed;border-radius:11px}.mark i{display:block;width:5px;background:var(--green);border-radius:2px}.mark i:nth-child(1){height:13px}.mark i:nth-child(2){height:25px}.mark i:nth-child(3){height:19px}.offline{font-size:12px;color:#547263;white-space:nowrap}.offline:before{content:"";display:inline-block;background:#559d77;width:7px;height:7px;border-radius:50%;margin-right:7px}
+main{display:grid;grid-template-columns:minmax(470px,540px) minmax(0,1fr);gap:26px;padding:26px 34px;max-width:1700px;margin:auto}.panel{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden}.panel-head{padding:21px 22px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}.eyebrow{color:#7a8c82;font-size:10px;letter-spacing:1.8px;font-weight:700;margin:0 0 7px}h2{font-size:17px;margin:0;letter-spacing:.2px}.hint{font-size:12px;color:#738278;line-height:1.8;margin:0}.table-hint{padding:0 22px 15px}.table-scroll{overflow:auto;max-height:400px}table{width:100%;border-collapse:collapse;table-layout:fixed}th{font-size:11px;color:#607268;text-align:right;background:#f7f9f7;padding:11px 8px;position:sticky;top:0;z-index:1;font-weight:600}th:first-child{padding-left:22px}th:last-child{width:37px}th small{display:block;font-size:10px;font-weight:400;margin-top:3px}td{padding:7px 4px;border-bottom:1px solid #edf1ee;vertical-align:top}td:first-child{padding-left:16px}td input{width:100%;min-width:0;border:1px solid transparent;border-radius:5px;padding:8px 5px;text-align:right;color:#263b31;background:#fafcfb;font-variant-numeric:tabular-nums}td input:hover{border-color:#dce4df}td input[aria-invalid=true]{background:#fff0ee;border-color:#cd695c}.cell-error{display:block;color:#af3d32;font-size:10px;line-height:1.5;overflow-wrap:anywhere;padding:3px 2px 0}td .delete{padding:6px;border:0;background:transparent;font-size:19px;color:#94a399;font-weight:400}td .delete:hover{color:#ad4639;background:#fff1ef}.table-foot{padding:13px 22px 17px;display:flex;justify-content:space-between;align-items:center;gap:8px}.subtle{font-size:12px;color:#75887b}
+details{border-top:1px solid var(--border)}summary{cursor:pointer;padding:20px 22px;font-size:14px;font-weight:650}summary::marker{color:#8a9b90}.settings{padding:0 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:17px 18px}.field{display:flex;flex-direction:column;gap:7px;font-size:12px;color:#52685b}.field input:not([type=color]),.field select,.field textarea{width:100%;padding:9px 10px;border:1px solid var(--border);background:white;border-radius:7px;color:#253e30}.field textarea{resize:vertical;min-height:68px;line-height:1.5}.field input[type=color]{width:100%;height:35px;border:1px solid var(--border);border-radius:6px;padding:3px;background:white}.colors{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.project-tools{padding:17px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}.project-tools button{font-size:12px;font-weight:500}.settings-error{padding:0 22px 14px;margin:0;color:#af3d32;font-size:12px}
+.right{min-width:0}.preview-head{display:flex;justify-content:space-between;align-items:center;padding:6px 1px 18px}.live{font-size:11px;background:#e6f0e9;color:#527d62;border-radius:20px;padding:5px 9px}.preview-panel{padding:28px;min-height:470px;background-color:#eaf0ec;background-image:radial-gradient(#cdd9d0 .7px,transparent .7px);background-size:12px 12px;display:flex;align-items:center;justify-content:center;border:1px solid #dce5df;border-radius:13px;overflow:auto}.artboard{width:100%;max-width:760px;filter:drop-shadow(0 8px 17px #253d3010)}.artboard svg{display:block;width:100%;height:auto}.artboard.transparent{background-image:conic-gradient(#e6e8e6 25%,#fff 0 50%,#e6e8e6 0 75%,#fff 0);background-size:16px 16px}.artboard.stale{opacity:.45}.preview-meta{display:flex;justify-content:space-between;color:#7b8d81;font-size:11px;padding:12px 2px;gap:10px}.export{margin-top:15px;padding:22px}.export-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}.export-title h2{font-size:15px}.bg-choice{display:flex;gap:8px;align-items:center;color:#6c7d72;font-size:12px}.bg-choice select{padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:white;color:#294535}.export-buttons{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:9px}.export-buttons button{padding:12px 6px}.export-buttons button small{display:block;font-size:10px;font-weight:400;opacity:.7;margin-top:4px}.export-note{margin-top:14px}.status{min-height:22px;font-size:12px;line-height:1.7;margin:12px 1px 0;color:#476e59}.status.error{color:#b14b3e}.invalid-banner{display:none;background:#fff0ed;color:#ad4336;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:12px;line-height:1.7}.invalid-banner.visible{display:block}#file-input{display:none}
+@media(min-width:1150px){.right{position:sticky;top:24px;align-self:start}}@media(max-width:1000px){main{grid-template-columns:1fr;padding:20px;max-width:800px}.right{grid-row:1}.preview-panel{min-height:300px}header{padding:22px}.offline{display:none}}@media(max-width:520px){main{padding:12px;gap:18px}.preview-panel{padding:14px}.panel-head{padding:18px 16px}.export{padding:16px}.export-buttons{gap:6px}.export-buttons button{font-size:12px}.settings{padding:0 16px 20px}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><div><h1>LOB Figure Maker</h1></div></div><span class="offline">Offline · No external connections</span></header>
+<main>
+<section class="panel" aria-labelledby="data-title">
+ <div class="panel-head"><div><p class="eyebrow">ORDER BOOK</p><h2 id="data-title">Order data</h2></div><span id="row-count" class="subtle"></span></div>
+ <p class="hint table-hint">Edit cells or paste a range from Excel.<br>Inner = near the price; outer = the tip of the bar.<br>Inner + outer quantities must not exceed the total.</p>
+ <div class="table-scroll"><table style="min-width:760px" aria-label="Order data input"><thead><tr><th scope="col">Price</th><th scope="col">Ask quantity</th><th scope="col">Ask inner<small>part of total</small></th><th scope="col">Ask outer<small>part of total</small></th><th scope="col">Bid quantity</th><th scope="col">Bid inner<small>part of total</small></th><th scope="col">Bid outer<small>part of total</small></th><th scope="col"><span aria-label="Row actions"></span></th></tr></thead><tbody id="rows"></tbody></table></div>
+ <div class="table-foot"><button id="add-row" type="button">+ Add row</button><span class="subtle">Prices shown highest first</span></div>
+ <details open><summary>Headings and colors</summary><div class="settings">
+  <label class="field">Ask heading<textarea id="askTitle" maxlength="500"></textarea></label><label class="field">Bid heading<textarea id="bidTitle" maxlength="500"></textarea></label>
+  <div class="colors" id="paint-controls" style="grid-template-columns:repeat(3,minmax(0,1fr))"></div>
+ </div></details>
+ <details><summary>Text and layout</summary><div class="settings">
+  <label class="field">Font size (px)<input id="fontSize" type="number" min="12" max="72" step="1"></label>
+  <label class="field">Bar height (px)<input id="barHeight" type="number" min="8" max="100" step="1"></label>
+  <label class="field">Row gap (px)<input id="rowGap" type="number" min="0" max="80" step="1"></label>
+  <label class="field">Maximum bar width (px)<input id="barWidth" type="number" min="60" max="600" step="1"></label>
+ </div><p id="settings-error" class="settings-error" hidden></p></details>
+ <div class="project-tools"><button id="save-project" type="button" data-output>Save project</button><button id="load-project" type="button">Open project</button><input id="file-input" type="file" accept=".json,application/json"></div>
+</section>
+<section class="right" aria-labelledby="preview-title">
+ <div class="preview-head"><div><p class="eyebrow">PREVIEW</p><h2 id="preview-title">Figure preview</h2></div><span class="live">Live preview</span></div>
+ <div id="invalid-banner" class="invalid-banner" role="alert"></div>
+ <div class="preview-panel"><div id="artboard" class="artboard"></div></div>
+ <div class="preview-meta"><span id="dimensions"></span><span>Shared quantity scale for asks and bids</span></div>
+ <div class="panel export">
+  <div class="export-title"><h2>Export figure</h2><label class="bg-choice">Background<select id="background"><option value="white">White</option><option value="transparent">Transparent</option></select></label></div>
+  <div class="export-buttons"><button id="copy-image" class="primary" type="button" data-output>Copy image<small>Paste into PowerPoint</small></button><button id="save-svg" type="button" data-output>Save SVG<small>Sharp at any size</small></button><button id="save-png" type="button" data-output>Save PNG<small>3× resolution</small></button></div>
+  <p class="hint export-note">In PowerPoint, use Insert → Pictures to add an SVG or PNG.<br>If copying is unavailable, save a PNG instead.</p>
+ </div>
+ <p id="status" class="status" role="status" aria-live="polite"></p>
+</section>
+</main>
+<script>
+'use strict';
+const LEGACY_FIELDS = ['price','ask','askHighlight','bid','bidHighlight'];
+const FIELDS = ['price','ask','askInnerHighlight','askHighlight','bid','bidInnerHighlight','bidHighlight'];
+const LABELS = ['Price','Ask quantity','Ask inner highlight quantity','Ask outer highlight quantity','Bid quantity','Bid inner highlight quantity','Bid outer highlight quantity'];
+const PAINTS = [['ask','Ask · Base'],['askInnerHighlight','Ask · Inner'],['askHighlight','Ask · Outer'],['bid','Bid · Base'],['bidInnerHighlight','Bid · Inner'],['bidHighlight','Bid · Outer']];
+const DEFAULTS = {askTitle:'Sell orders\n(Ask)',bidTitle:'Buy orders\n(Bid)',askColor:'#ff0000',askInnerHighlightColor:'#ff8080',askHighlightColor:'#b91c1c',bidColor:'#00b3df',bidInnerHighlightColor:'#80d9ef',bidHighlightColor:'#2c638d',askStyle:'solid',askInnerHighlightStyle:'solid',askHighlightStyle:'solid',bidStyle:'solid',bidInnerHighlightStyle:'solid',bidHighlightStyle:'solid',fontSize:28,barHeight:28,rowGap:9,barWidth:150,background:'white'};
+const LIMITS = {fontSize:[12,72],barHeight:[8,100],rowGap:[0,80],barWidth:[60,600]};
+const MAX_ROWS = 1000;
+const SAMPLE = [
+ ['104','300','','',''],['103','600','','',''],['102','700','','',''],['100','','','',''],
+ ['99','','','400','100'],['98','','','500',''],['97','','','600',''],['95','','','500','']
+].map(values=>Object.fromEntries(FIELDS.map(field=>[field,values[LEGACY_FIELDS.indexOf(field)]??''])));
+let rows = structuredClone(SAMPLE), settings = {...DEFAULTS}, currentSVG = '', size = {width:0,height:0}, valid = false, busy = false;
+const $ = id=>document.getElementById(id);
+const escapeXML = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+const measureContext = document.createElement('canvas').getContext('2d');
+const FONT = 'Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif';
+const formatNumber = number=>number.toLocaleString('en-US',{maximumFractionDigits:20,useGrouping:false});
+
+function numeric(value) {
+ const text = String(value).trim();
+ if (!text) return null;
+ if (!/^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(text) && !/^[+-]?\.\d+$/.test(text)) return NaN;
+ const number = Number(text.replaceAll(',',''));
+ return Number.isFinite(number) && Math.abs(number)<=Number.MAX_SAFE_INTEGER ? number : NaN;
+}
+function validateRows(source) {
+ const errors = new Map(), parsed = [], seen = new Map();
+ const error = (index,field,message)=>errors.set(`${index}:${field}`,message);
+ source.forEach((row,index)=>{
+  const values = FIELDS.map(field=>numeric(row[field]??''));
+  const entirelyEmpty = FIELDS.every(field=>!String(row[field]??'').trim());
+  if (entirelyEmpty) return;
+  values.forEach((value,col)=>{
+   if (Number.isNaN(value)) error(index,FIELDS[col],'Enter a valid number');
+   else if (col>0 && value!==null && value<0) error(index,FIELDS[col],'Must be 0 or greater');
+  });
+  const [price,ask,askInnerHighlight,askHighlight,bid,bidInnerHighlight,bidHighlight] = values;
+  if (price===null) error(index,'price','Enter a price');
+  else if (Number.isFinite(price)) {
+   if (seen.has(price)) {error(index,'price','Duplicate price');error(seen.get(price),'price','Duplicate price');}
+   seen.set(price,index);
+  }
+  for (const [side,total,inner,outer] of [['ask',ask,askInnerHighlight,askHighlight],['bid',bid,bidInnerHighlight,bidHighlight]]) {
+   if ((inner??0)+(outer??0)>(total??0)) {
+    error(index,`${side}InnerHighlight`,'Inner + outer must not exceed total');
+    error(index,`${side}Highlight`,'Inner + outer must not exceed total');
+   }
+  }
+  parsed.push({price,ask:ask??0,askInnerHighlight:askInnerHighlight??0,askHighlight:askHighlight??0,bid:bid??0,bidInnerHighlight:bidInnerHighlight??0,bidHighlight:bidHighlight??0});
+ });
+ return {errors,parsed:parsed.sort((a,b)=>b.price-a.price)};
+}
+function validateSettings(candidate) {
+ for (const [key,[min,max]] of Object.entries(LIMITS)) {
+  if (!/^\d+$/.test(String(candidate[key])) || !Number.isInteger(Number(candidate[key])) || Number(candidate[key])<min || Number(candidate[key])>max) return `${$(key).parentElement.firstChild.textContent} must be an integer from ${min} to ${max}.`;
+ }
+ for (const [part] of PAINTS) {
+  if (!/^#[0-9a-f]{6}$/i.test(candidate[`${part}Color`])) return 'Invalid color format.';
+  if (!['solid','dotted'].includes(candidate[`${part}Style`])) return 'Invalid fill style.';
+ }
+ for (const key of ['askTitle','bidTitle']) if (typeof candidate[key]!=='string' || candidate[key].length>500) return 'Headings must be 500 characters or fewer.';
+ if (!['white','transparent'].includes(candidate.background)) return 'Invalid background setting.';
+ return '';
+}
+function syncControls() {for (const key of Object.keys(DEFAULTS)) $(key).value=settings[key];}
+function renderTable() {
+ const body = $('rows'); body.replaceChildren();
+ rows.forEach((row,index)=>{
+  const tr = document.createElement('tr');
+  FIELDS.forEach((field,col)=>{
+   const td = document.createElement('td'), input = document.createElement('input'), message = document.createElement('span');
+   input.type='text'; input.inputMode='decimal'; input.autocomplete='off'; input.spellcheck=false;
+   input.value=row[field]; input.dataset.row=index; input.dataset.field=field;
+   input.setAttribute('aria-label',`Row ${index+1}: ${LABELS[col]}`);
+   message.id=`error-${index}-${field}`; message.className='cell-error';
+   input.setAttribute('aria-describedby',message.id);td.append(input,message);tr.append(td);
+  });
+  const td=document.createElement('td'), button=document.createElement('button');
+  button.type='button';button.textContent='×';button.className='delete';button.setAttribute('aria-label',`Delete row ${index+1}`);
+  button.addEventListener('click',()=>{rows.splice(index,1);if (!rows.length) rows.push(emptyRow());renderTable();update();});td.append(button);tr.append(td);body.append(tr);
+ });
+ $('row-count').textContent=`${rows.length} rows`;
+ $('add-row').disabled=rows.length>=MAX_ROWS;
+}
+const emptyRow = ()=>Object.fromEntries(FIELDS.map(key=>[key,'']));
+function focusCell(index,field) {document.querySelector(`input[data-row="${index}"][data-field="${field}"]`)?.focus();}
+function setStatus(message,isError=false) {$('status').textContent=message;$('status').classList.toggle('error',isError);}
+function updateButtons() {document.querySelectorAll('[data-output]').forEach(button=>button.disabled=!valid||busy);}
+function update() {
+ setStatus('');
+ const {errors,parsed}=validateRows(rows), settingsError=validateSettings(settings);
+ document.querySelectorAll('input[data-field]').forEach(input=>{
+  const message=errors.get(`${input.dataset.row}:${input.dataset.field}`)||'';
+  input.setAttribute('aria-invalid',String(Boolean(message)));$(input.getAttribute('aria-describedby')).textContent=message;
+ });
+ $('settings-error').textContent=settingsError;$('settings-error').hidden=!settingsError;
+ valid=!errors.size && !settingsError && parsed.length>0;
+ const banner=$('invalid-banner');banner.classList.toggle('visible',!valid);
+ banner.textContent=errors.size?'Fix the highlighted cells to resume preview updates and export.':settingsError||'Enter at least one price to display the figure.';
+ $('artboard').classList.toggle('stale',!valid);updateButtons();
+ if (!valid) return;
+ const result=buildSVG(parsed,settings); currentSVG=result.svg;size=result;
+ $('artboard').innerHTML=currentSVG;$('artboard').classList.toggle('transparent',settings.background==='transparent');
+ $('dimensions').textContent=`${size.width} × ${size.height} px · PNG at 3×`;
+}
+function buildSVG(data,options) {
+ const font=Number(options.fontSize),barHeight=Number(options.barHeight),barWidth=Number(options.barWidth);
+ const rowHeight=Math.max(barHeight,font*1.25)+Number(options.rowGap),pad=32,gap=Math.max(16,font*.6);
+ measureContext.font=`${font}px ${FONT}`;
+ const measure=text=>measureContext.measureText(text).width;
+ const priceWidth=Math.ceil(Math.max(...data.map(row=>measure(formatNumber(row.price))),font*1.6)+gap*1.5);
+ const quantityWidth=Math.ceil(Math.max(...data.flatMap(row=>[measure(formatNumber(row.ask)),measure(formatNumber(row.bid))]),font*2));
+ const askLines=options.askTitle.split(/\r?\n/),bidLines=options.bidTitle.split(/\r?\n/);
+ const titleWidth=Math.max(...[...askLines,...bidLines].map(measure),0);
+ const sideWidth=Math.ceil(Math.max(barWidth+gap+quantityWidth,titleWidth+gap));
+ const width=2*pad+sideWidth*2+priceWidth,left=pad+sideWidth,right=left+priceWidth;
+ const titleHeight=Math.max(askLines.length,bidLines.length)*font*1.25;
+ const top=Math.ceil(pad+titleHeight+20),height=Math.ceil(top+data.length*rowHeight+pad);
+ const max=Math.max(...data.flatMap(row=>[row.ask,row.bid]),0)||1;
+ const text=(x,y,value,anchor='middle')=>`<text x="${x}" y="${y}" text-anchor="${anchor}">${escapeXML(value)}</text>`;
+ let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title"><title id="chart-title">Limit order book figure</title>`;
+ if(options.background==='white') svg+=`<rect width="${width}" height="${height}" fill="#ffffff"/>`;
+ svg+=`<g font-family="${escapeXML(FONT)}" font-size="${font}" font-weight="400" fill="#111111">`;
+ for(const [lines,center] of [[askLines,pad+sideWidth/2],[bidLines,right+sideWidth/2]]) lines.forEach((line,i)=>{svg+=text(center,pad+font+(i*font*1.25),line);});
+ svg+=`<path d="M ${left} ${top} V ${height-pad} M ${right} ${top} V ${height-pad}" stroke="#111111" stroke-width="1.7" fill="none"/>`;
+ data.forEach((row,index)=>{
+  const cy=top+rowHeight*(index+.5),y=cy-barHeight/2;
+  svg+=text((left+right)/2,cy+font*.35,formatNumber(row.price));
+  if(row.ask>0) {
+   const w=row.ask/max*barWidth,outer=row.askHighlight/max*barWidth,inner=row.askInnerHighlight/max*barWidth;
+   svg+=paintRect(left-w+outer,y,Math.max(0,w-inner-outer),barHeight,'ask',options);
+   svg+=paintRect(left-w,y,outer,barHeight,'askHighlight',options);
+   svg+=paintRect(left-inner,y,inner,barHeight,'askInnerHighlight',options);
+   svg+=text(left-barWidth-gap,cy+font*.35,formatNumber(row.ask),'end');
+  }
+  if(row.bid>0) {
+   const w=row.bid/max*barWidth,outer=row.bidHighlight/max*barWidth,inner=row.bidInnerHighlight/max*barWidth;
+   svg+=paintRect(right+inner,y,Math.max(0,w-inner-outer),barHeight,'bid',options);
+   svg+=paintRect(right+w-outer,y,outer,barHeight,'bidHighlight',options);
+   svg+=paintRect(right,y,inner,barHeight,'bidInnerHighlight',options);
+   svg+=text(right+barWidth+gap,cy+font*.35,formatNumber(row.bid),'start');
+  }
+ });
+ return {svg:svg+'</g></svg>',width,height};
+}
+function paintRect(x,y,width,height,part,options) {
+ if (!(width>0)) return '';
+ const color=options[`${part}Color`];
+ if (options[`${part}Style`]==='solid') return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${color}"/>`;
+ const stroke=Math.min(1.8,width/3,height/3),inset=stroke/2;
+ return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#ffffff"/><rect x="${x+inset}" y="${y+inset}" width="${width-stroke}" height="${height-stroke}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="1 4" stroke-linecap="round"/>`;
+}
+function download(blob,name) {
+ const url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=name;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+async function pngBlob(svg,width,height) {
+ const scale=3;
+ if(width*scale>32760 || height*scale>32760 || width*height*scale*scale>100000000) throw new Error('The figure is too large for PNG. Reduce the row count, font size or bar width, or save as SVG.');
+ const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+ try {
+  const image=new Image();
+  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=()=>reject(new Error('Could not create the image. Try saving as SVG.'));image.src=url;});
+  const canvas=document.createElement('canvas');canvas.width=width*scale;canvas.height=height*scale;
+  const ctx=canvas.getContext('2d');if(!ctx) throw new Error('This browser cannot create a PNG.');
+  ctx.drawImage(image,0,0,canvas.width,canvas.height);
+  return await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Could not create the PNG. Try saving as SVG.')),'image/png'));
+ } finally {URL.revokeObjectURL(url);}
+}
+async function exportPNG(copy) {
+ if(!valid||busy) return;
+ if(copy && (!navigator.clipboard?.write || typeof ClipboardItem==='undefined')) {setStatus('Image copying is unavailable in this browser. Use Save PNG and insert the file instead.',true);return;}
+ busy=true;updateButtons();setStatus(copy?'Preparing image for copying…':'Creating PNG…');
+ try {
+  const promise=pngBlob(currentSVG,size.width,size.height);
+  if(copy) {
+   // Start clipboard.write within the click gesture, including Safari's promise-based image path.
+   let item;try {item=new ClipboardItem({'image/png':promise});} catch(error) {await promise.catch(()=>{});throw error;}
+   // Observe conversion errors even if clipboard access is rejected before the image resolves.
+   promise.catch(()=>{});
+   await navigator.clipboard.write([item]);setStatus('Image copied. Paste it into PowerPoint.');
+  } else {download(await promise,'order-book.png');setStatus('PNG exported. In PowerPoint, use Insert → Pictures to add it.');}
+ } catch(error) {setStatus(copy?'Could not copy the image. Use Save PNG and insert the file instead.':error.message,true);}
+ finally {busy=false;updateButtons();}
+}
+$('rows').addEventListener('input',event=>{const input=event.target;if(!input.dataset.field)return;rows[Number(input.dataset.row)][input.dataset.field]=input.value;update();});
+$('rows').addEventListener('paste',event=>{
+ const input=event.target;if(!input.dataset.field)return;
+ const text=event.clipboardData?.getData('text/plain');if(!text || !/[\t\r\n]/.test(text))return;
+ event.preventDefault();
+ const matrix=text.replace(/\r\n?/g,'\n').replace(/\n$/,'').split('\n').map(line=>line.split('\t'));
+ const startRow=Number(input.dataset.row),startCol=FIELDS.indexOf(input.dataset.field);
+ if(startRow+matrix.length>MAX_ROWS) {setStatus('The limit is 1,000 rows. Paste fewer rows.',true);return;}
+ if(matrix.some(line=>line.length+startCol>FIELDS.length)) {setStatus('Too many columns. Paste a range that fits to the right of the selected cell (up to 7 columns).',true);return;}
+ matrix.forEach((line,i)=>{while(rows.length<=startRow+i)rows.push(emptyRow());line.forEach((value,j)=>{rows[startRow+i][FIELDS[startCol+j]]=value.trim();});});
+ renderTable();update();focusCell(startRow,input.dataset.field);
+});
+$('rows').addEventListener('keydown',event=>{
+ const input=event.target;if(event.key!=='Enter'||!input.dataset.field||event.isComposing)return;
+ event.preventDefault();const next=Number(input.dataset.row)+1;
+ if(next===rows.length){if(rows.length>=MAX_ROWS)return;rows.push(emptyRow());renderTable();update();}focusCell(next,input.dataset.field);
+});
+$('add-row').addEventListener('click',()=>{if(rows.length>=MAX_ROWS)return;rows.push(emptyRow());renderTable();update();focusCell(rows.length-1,'price');});
+for (const [part,label] of PAINTS) {
+ const card=document.createElement('div');card.className='field';
+ const colorLabel=document.createElement('label');colorLabel.textContent=label;
+ const color=document.createElement('input');color.type='color';color.id=`${part}Color`;colorLabel.append(color);
+ const style=document.createElement('select');style.id=`${part}Style`;style.setAttribute('aria-label',`${label} fill style`);
+ for (const [value,text] of [['solid','Solid fill'],['dotted','Dotted outline, white fill']]) {const option=document.createElement('option');option.value=value;option.textContent=text;style.append(option);}
+ card.append(colorLabel,style);$('paint-controls').append(card);
+}
+for(const key of Object.keys(DEFAULTS)) $(key).addEventListener('input',()=>{settings[key]=$(key).value;update();});
+$('save-svg').addEventListener('click',()=>{if(!valid)return;download(new Blob([currentSVG],{type:'image/svg+xml;charset=utf-8'}),'order-book.svg');setStatus('SVG exported. It stays sharp at any size.');});
+$('save-png').addEventListener('click',()=>exportPNG(false));$('copy-image').addEventListener('click',()=>exportPNG(true));
+$('save-project').addEventListener('click',()=>{if(!valid)return;download(new Blob([JSON.stringify({version:2,rows,settings},null,2)],{type:'application/json'}),'order-book.json');setStatus('Project saved. Use Open project to edit it again.');});
+$('load-project').addEventListener('click',()=>$('file-input').click());
+$('file-input').addEventListener('change',async event=>{
+ const file=event.target.files[0];if(!file)return;
+ try {
+  if(file.size>5000000)throw new Error('Choose a file no larger than 5 MB.');
+  const project=JSON.parse(await file.text());
+  if(![1,2].includes(project.version) || !Array.isArray(project.rows) || !project.rows.length || typeof project.settings!=='object' || project.settings===null)throw new Error('Choose a JSON project saved by this tool.');
+  if(project.rows.length>MAX_ROWS)throw new Error('Order data is limited to 1,000 rows.');
+  const incoming=project.rows.map(row=>{
+   const required=project.version===1?LEGACY_FIELDS:FIELDS;
+   if(!row||typeof row!=='object'||required.some(key=>!['string','number'].includes(typeof row[key])))throw new Error('Invalid order data format.');
+   return Object.fromEntries(FIELDS.map(key=>[key,String(project.version===1&&!LEGACY_FIELDS.includes(key)?'':row[key])]));
+  });
+  const options=Object.fromEntries(Object.keys(DEFAULTS).map(key=>[key,project.settings[key]??DEFAULTS[key]]));
+  const problem=validateSettings(options);if(problem)throw new Error(problem);
+  if(validateRows(incoming).errors.size)throw new Error('Order data contains invalid numbers, duplicate prices or inconsistent quantities.');
+  rows=incoming;settings=options;syncControls();renderTable();update();setStatus('Project loaded.');
+ } catch(error) {setStatus(`Could not open project. ${error instanceof SyntaxError?'Check the JSON format.':error.message}`,true);}
+ finally {event.target.value='';}
+});
+syncControls();renderTable();update();
+</script>
+</body>
+</html>
