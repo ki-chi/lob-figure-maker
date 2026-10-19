@@ -8,3 +8,7 @@ A simple offline tool for creating limit order book figures for PowerPoint.
 4. Copy the image or export as SVG or high-resolution PNG.
 
 Save and reopen JSON project files to continue editing later.
+
+## Screenshot
+
+<img width="999" height="1263" alt="image" src="https://github.com/user-attachments/assets/382a991d-91f1-4a14-b1c8-e6a4bdb3f6bd" />
