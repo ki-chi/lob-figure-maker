@@ -147,3 +147,26 @@ test('quantity label controls edit individual rows and persist through project r
  const text=JSON.stringify(legacy);await a.event('file-input','change',{target:{files:[{size:text.length,text:async()=>text}],value:'test'}});
  assert.equal(a.run('valid'),true);assert.equal(a.run('rows[0].askLabel'),'');assert.equal(a.run('rows[0].askLabelColor'),'#111111');
 });
+test('market orders sort above numeric prices and render as MO',()=>{
+ const a=app();a.run("rows=[{...emptyRow(),price:'-5',ask:'30'},{...emptyRow(),price:' mo ',ask:'100',bid:'80',askLabel:'Market sell',bidLabelColor:'#123456'},{...emptyRow(),price:'999',bid:'50'}];update()");
+ assert.equal(a.run('valid'),true);
+ assert.equal(a.run('JSON.stringify(validateRows(rows).parsed.map(row=>row.price))'),'["MO",999,-5]');
+ const svg=a.run('currentSVG');assert.ok(svg.indexOf('>MO</text>')<svg.indexOf('>999</text>'));assert.ok(svg.indexOf('>999</text>')<svg.indexOf('>-5</text>'));
+ assert.match(svg,/>Market sell<\/text>/);assert.match(svg,/fill="#123456">80<\/text>/);assert.doesNotMatch(svg,/NaN|undefined/);
+ assert.equal(a.inputs()[0].inputMode,'text');
+});
+test('MO is only valid as a unique price, not as a quantity or arbitrary price text',()=>{
+ const a=app();a.run("rows=[{...emptyRow(),price:'MO',ask:'1'},{...emptyRow(),price:'mo',bid:'2'}];update()");
+ assert.equal(a.run('valid'),false);assert.equal(a.run("validateRows(rows).errors.get('0:price')"),'Duplicate price');assert.equal(a.run("validateRows(rows).errors.get('1:price')"),'Duplicate price');
+ a.run("rows=[{...emptyRow(),price:'100',ask:'MO'}];update()");assert.equal(a.run('valid'),false);
+ a.run("rows=[{...emptyRow(),price:'MOO',ask:'100'}];update()");assert.equal(a.run('valid'),false);
+ a.run("rows=[{...emptyRow(),price:'MO'}];update()");assert.equal(a.run('valid'),true);
+});
+test('market orders support Excel paste and project round trips',async()=>{
+ const a=app();await a.event('rows','paste',{target:a.inputs()[0],clipboardData:{getData:()=> 'MO\t120\t20\t30\t80\t10\t20'},preventDefault(){}});
+ assert.equal(a.run('valid'),true);assert.equal(a.run('validateRows(rows).parsed[0].price'),'MO');
+ await a.event('save-project','click');const json=await a.urls.at(-1).text(),svg=a.run('currentSVG');
+ a.run('rows=structuredClone(SAMPLE);renderTable();update()');await a.event('file-input','change',{target:{files:[{size:json.length,text:async()=>json}],value:'test'}});
+ assert.equal(a.run('valid'),true);assert.equal(a.run('currentSVG'),svg);assert.equal(a.run('rows[0].price'),'MO');
+ if(process.env.MO_TEST_OUTPUT)fs.writeFileSync(process.env.MO_TEST_OUTPUT,svg);
+});
