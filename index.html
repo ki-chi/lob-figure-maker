@@ -74,6 +74,27 @@ const FONT = 'Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif';
 const formatNumber = number=>number.toLocaleString('en-US',{maximumFractionDigits:20,useGrouping:false});
 const parsePrice = value=>String(value).trim().toUpperCase()==='MO'?'MO':numeric(value);
 const formatPrice = value=>value==='MO'?'MO':formatNumber(value);
+function comparePrices(a,b) {
+ const left=parsePrice(a),right=parsePrice(b);
+ if(left===right)return 0;
+ if(left==='MO')return -1;
+ if(right==='MO')return 1;
+ const leftValid=Number.isFinite(left),rightValid=Number.isFinite(right);
+ if(leftValid&&rightValid)return right-left;
+ return leftValid?-1:rightValid?1:0;
+}
+function sortInputRows() {
+ const before=[...rows],active=document.activeElement;
+ const focusedRow=active?.dataset?.field?rows[Number(active.dataset.row)]:null;
+ const field=active?.dataset?.field,selection=[active?.selectionStart,active?.selectionEnd];
+ rows.sort((a,b)=>comparePrices(a.price,b.price));
+ if(rows.every((row,index)=>row===before[index]))return;
+ renderTable();update();
+ if(focusedRow) {
+  const index=rows.indexOf(focusedRow);focusCell(index,field);
+  if(typeof selection[0]==='number')document.querySelector(`input[data-row="${index}"][data-field="${field}"]`)?.setSelectionRange?.(...selection);
+ }
+}
 
 function numeric(value) {
  const text = String(value).trim();
@@ -112,7 +133,7 @@ function validateRows(source) {
   }
   parsed.push({...Object.fromEntries(Object.entries(LABEL_FIELDS).map(([key,fallback])=>[key,row[key]??fallback])),price,ask:ask??0,askInnerHighlight:askInnerHighlight??0,askHighlight:askHighlight??0,bid:bid??0,bidInnerHighlight:bidInnerHighlight??0,bidHighlight:bidHighlight??0});
  });
- return {errors,parsed:parsed.sort((a,b)=>a.price===b.price?0:a.price==='MO'?-1:b.price==='MO'?1:b.price-a.price)};
+ return {errors,parsed:parsed.sort((a,b)=>comparePrices(a.price,b.price))};
 }
 function validateSettings(candidate) {
  for (const [key,[min,max]] of Object.entries(LIMITS)) {
@@ -276,6 +297,9 @@ function editCell(event) {
 }
 $('rows').addEventListener('input',editCell);
 $('label-rows').addEventListener('input',editCell);
+$('rows').addEventListener('focusout',event=>{
+ if(event.target.dataset.field==='price')setTimeout(sortInputRows,0);
+});
 $('rows').addEventListener('paste',event=>{
  const input=event.target;if(!input.dataset.field)return;
  const text=event.clipboardData?.getData('text/plain');if(!text || !/[\t\r\n]/.test(text))return;
@@ -285,11 +309,13 @@ $('rows').addEventListener('paste',event=>{
  if(startRow+matrix.length>MAX_ROWS) {setStatus('The limit is 1,000 rows. Paste fewer rows.',true);return;}
  if(matrix.some(line=>line.length+startCol>FIELDS.length)) {setStatus('Too many columns. Paste a range that fits to the right of the selected cell (up to 7 columns).',true);return;}
  matrix.forEach((line,i)=>{while(rows.length<=startRow+i)rows.push(emptyRow());line.forEach((value,j)=>{rows[startRow+i][FIELDS[startCol+j]]=value.trim();});});
- renderTable();update();focusCell(startRow,input.dataset.field);
+ const pastedRow=rows[startRow];sortInputRows();renderTable();update();focusCell(rows.indexOf(pastedRow),input.dataset.field);
 });
 $('rows').addEventListener('keydown',event=>{
  const input=event.target;if(event.key!=='Enter'||!input.dataset.field||event.isComposing)return;
- event.preventDefault();const next=Number(input.dataset.row)+1;
+ event.preventDefault();const row=rows[Number(input.dataset.row)];
+ if(input.dataset.field==='price')sortInputRows();
+ const next=rows.indexOf(row)+1;
  if(next===rows.length){if(rows.length>=MAX_ROWS)return;rows.push(emptyRow());renderTable();update();}focusCell(next,input.dataset.field);
 });
 $('add-row').addEventListener('click',()=>{if(rows.length>=MAX_ROWS)return;rows.push(emptyRow());renderTable();update();focusCell(rows.length-1,'price');});
@@ -322,11 +348,11 @@ $('file-input').addEventListener('change',async event=>{
   const options=Object.fromEntries(Object.keys(DEFAULTS).map(key=>[key,project.settings[key]??DEFAULTS[key]]));
   const problem=validateSettings(options);if(problem)throw new Error(problem);
   if(validateRows(incoming).errors.size)throw new Error('Order data contains invalid numbers, duplicate prices or inconsistent quantities.');
-  rows=incoming;settings=options;syncControls();renderTable();update();setStatus('Project loaded.');
+  rows=incoming;settings=options;sortInputRows();syncControls();renderTable();update();setStatus('Project loaded.');
  } catch(error) {setStatus(`Could not open project. ${error instanceof SyntaxError?'Check the JSON format.':error.message}`,true);}
  finally {event.target.value='';}
 });
-syncControls();renderTable();update();
+syncControls();sortInputRows();renderTable();update();
 </script>
 </body>
 </html>

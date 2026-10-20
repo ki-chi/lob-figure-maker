@@ -3,7 +3,7 @@
 A simple offline tool for creating limit order book figures for PowerPoint.
 
 1. Open `index.html` in your browser. No installation or server required.
-2. Enter order data or paste cells from Excel. Use `MO` as the price for market orders, shown at the top.
+2. Enter order data or paste cells from Excel. Rows sort by descending price after editing; market orders (`MO`) come first.
 3. Customize headings, highlights, fill styles, and per-row quantity labels and text colors.
 4. Copy the image or export as SVG or high-resolution PNG.
 

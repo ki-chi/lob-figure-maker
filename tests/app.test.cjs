@@ -170,3 +170,25 @@ test('market orders support Excel paste and project round trips',async()=>{
  assert.equal(a.run('valid'),true);assert.equal(a.run('currentSVG'),svg);assert.equal(a.run('rows[0].price'),'MO');
  if(process.env.MO_TEST_OUTPUT)fs.writeFileSync(process.env.MO_TEST_OUTPUT,svg);
 });
+test('price edits sort on leaving the field while quantities and labels stay with their row',async()=>{
+ const a=app(),input=a.inputs()[0];a.run("rows[0].askLabel='Keep with 300';rows[0].askLabelColor='#123456'");
+ input.value='90';await a.event('rows','input',{target:input});
+ assert.equal(a.run('rows[0].price'),'90');
+ await a.event('rows','focusout',{target:input});
+ assert.equal(a.run('rows.at(-1).price'),'90');assert.equal(a.run('rows.at(-1).ask'),'300');assert.equal(a.run('rows.at(-1).askLabel'),'Keep with 300');
+ assert.equal(a.inputs()[0].value,'103');
+ assert.equal(a.registry.get('label-rows').children.at(-1).children[1].children[0].value,'Keep with 300');
+});
+test('paste and import sort input tables with MO first and preserve associated cells',async()=>{
+ const a=app();await a.event('rows','paste',{target:a.inputs()[0],clipboardData:{getData:()=> '90\t10\t\t\t\t\t\nMO\t20\t\t\t\t\t\n110\t30\t\t\t\t\t'},preventDefault(){}});
+ assert.equal(a.run('rows[0].price'),'MO');assert.equal(a.run('rows[1].price'),'110');assert.equal(a.run('rows[1].ask'),'30');assert.equal(a.run('rows.at(-1).price'),'90');
+ const project=a.run("JSON.stringify({version:3,settings,rows:[{...emptyRow(),price:'-2',askLabel:'low'},{...emptyRow(),price:'3.5'},{...emptyRow(),price:' mo ',askLabel:'market'}]})");
+ await a.event('file-input','change',{target:{files:[{size:project.length,text:async()=>project}],value:'test'}});
+ assert.equal(a.run('JSON.stringify(rows.map(row=>row.price))'),'[" mo ","3.5","-2"]');assert.equal(a.run('rows[0].askLabel'),'market');
+});
+test('Enter commits sorting and unfinished rows remain at the bottom without losing data',async()=>{
+ const a=app();a.run("rows=[{...emptyRow(),price:'',ask:'7'},{...emptyRow(),price:'wrong',ask:'8'},{...emptyRow(),price:'2'},{...emptyRow(),price:'1,000'},{...emptyRow(),price:'MO'}];renderTable();update()");
+ await a.event('rows','keydown',{target:a.inputs()[14],key:'Enter',preventDefault(){}});
+ assert.equal(a.run('JSON.stringify(rows.map(row=>row.price))'),'["MO","1,000","2","","wrong"]');
+ assert.equal(a.run('rows[3].ask'),'7');assert.equal(a.run('rows[4].ask'),'8');assert.equal(a.run('valid'),false);
+});
