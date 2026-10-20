@@ -23,6 +23,10 @@ details{border-top:1px solid var(--border)}summary{cursor:pointer;padding:20px 2
  <p class="hint table-hint">Edit cells or paste a range from Excel.<br>Inner = near the price; outer = the tip of the bar.<br>Inner + outer quantities must not exceed the total.</p>
  <div class="table-scroll"><table style="min-width:760px" aria-label="Order data input"><thead><tr><th scope="col">Price</th><th scope="col">Ask quantity</th><th scope="col">Ask inner<small>part of total</small></th><th scope="col">Ask outer<small>part of total</small></th><th scope="col">Bid quantity</th><th scope="col">Bid inner<small>part of total</small></th><th scope="col">Bid outer<small>part of total</small></th><th scope="col"><span aria-label="Row actions"></span></th></tr></thead><tbody id="rows"></tbody></table></div>
  <div class="table-foot"><button id="add-row" type="button">+ Add row</button><span class="subtle">Prices shown highest first</span></div>
+ <details><summary>Quantity labels</summary>
+  <p class="hint table-hint">Leave a label blank to show the quantity. Labels and text colors can be set for each price and side.</p>
+  <div class="table-scroll"><table style="min-width:480px" aria-label="Quantity labels"><thead><tr><th scope="col">Price</th><th scope="col">Ask label</th><th scope="col" style="width:64px">Color</th><th scope="col">Bid label</th><th scope="col" style="width:64px">Color</th></tr></thead><tbody id="label-rows"></tbody></table></div>
+ </details>
  <details open><summary>Headings and colors</summary><div class="settings">
   <label class="field">Ask heading<textarea id="askTitle" maxlength="500"></textarea></label><label class="field">Bid heading<textarea id="bidTitle" maxlength="500"></textarea></label>
   <div class="colors" id="paint-controls" style="grid-template-columns:repeat(3,minmax(0,1fr))"></div>
@@ -53,6 +57,7 @@ details{border-top:1px solid var(--border)}summary{cursor:pointer;padding:20px 2
 const LEGACY_FIELDS = ['price','ask','askHighlight','bid','bidHighlight'];
 const FIELDS = ['price','ask','askInnerHighlight','askHighlight','bid','bidInnerHighlight','bidHighlight'];
 const LABELS = ['Price','Ask quantity','Ask inner highlight quantity','Ask outer highlight quantity','Bid quantity','Bid inner highlight quantity','Bid outer highlight quantity'];
+const LABEL_FIELDS = {askLabel:'',askLabelColor:'#111111',bidLabel:'',bidLabelColor:'#111111'};
 const PAINTS = [['ask','Ask · Base'],['askInnerHighlight','Ask · Inner'],['askHighlight','Ask · Outer'],['bid','Bid · Base'],['bidInnerHighlight','Bid · Inner'],['bidHighlight','Bid · Outer']];
 const DEFAULTS = {askTitle:'Sell orders\n(Ask)',bidTitle:'Buy orders\n(Bid)',askColor:'#ff0000',askInnerHighlightColor:'#ff8080',askHighlightColor:'#b91c1c',bidColor:'#00b3df',bidInnerHighlightColor:'#80d9ef',bidHighlightColor:'#2c638d',askStyle:'solid',askInnerHighlightStyle:'solid',askHighlightStyle:'solid',bidStyle:'solid',bidInnerHighlightStyle:'solid',bidHighlightStyle:'solid',fontSize:28,barHeight:28,rowGap:9,barWidth:150,background:'white'};
 const LIMITS = {fontSize:[12,72],barHeight:[8,100],rowGap:[0,80],barWidth:[60,600]};
@@ -80,8 +85,13 @@ function validateRows(source) {
  const error = (index,field,message)=>errors.set(`${index}:${field}`,message);
  source.forEach((row,index)=>{
   const values = FIELDS.map(field=>numeric(row[field]??''));
-  const entirelyEmpty = FIELDS.every(field=>!String(row[field]??'').trim());
+  const entirelyEmpty = [...FIELDS,'askLabel','bidLabel'].every(field=>!String(row[field]??'').trim());
   if (entirelyEmpty) return;
+  for (const side of ['ask','bid']) {
+   const label=row[`${side}Label`]??'',color=row[`${side}LabelColor`]??'#111111';
+   if (typeof label!=='string' || label.length>200) error(index,`${side}Label`,'Use 200 characters or fewer');
+   if (!/^#[0-9a-f]{6}$/i.test(color)) error(index,`${side}LabelColor`,'Invalid color');
+  }
   values.forEach((value,col)=>{
    if (Number.isNaN(value)) error(index,FIELDS[col],'Enter a valid number');
    else if (col>0 && value!==null && value<0) error(index,FIELDS[col],'Must be 0 or greater');
@@ -98,7 +108,7 @@ function validateRows(source) {
     error(index,`${side}Highlight`,'Inner + outer must not exceed total');
    }
   }
-  parsed.push({price,ask:ask??0,askInnerHighlight:askInnerHighlight??0,askHighlight:askHighlight??0,bid:bid??0,bidInnerHighlight:bidInnerHighlight??0,bidHighlight:bidHighlight??0});
+  parsed.push({...Object.fromEntries(Object.entries(LABEL_FIELDS).map(([key,fallback])=>[key,row[key]??fallback])),price,ask:ask??0,askInnerHighlight:askInnerHighlight??0,askHighlight:askHighlight??0,bid:bid??0,bidInnerHighlight:bidInnerHighlight??0,bidHighlight:bidHighlight??0});
  });
  return {errors,parsed:parsed.sort((a,b)=>b.price-a.price)};
 }
@@ -133,8 +143,26 @@ function renderTable() {
  });
  $('row-count').textContent=`${rows.length} rows`;
  $('add-row').disabled=rows.length>=MAX_ROWS;
+ renderLabelTable();
 }
-const emptyRow = ()=>Object.fromEntries(FIELDS.map(key=>[key,'']));
+function renderLabelTable() {
+ const body=$('label-rows');body.replaceChildren();
+ rows.forEach((row,index)=>{
+  const tr=document.createElement('tr'),price=document.createElement('td');
+  price.textContent=row.price||'—';price.style='padding:15px 8px;text-align:right';tr.append(price);
+  for(const field of Object.keys(LABEL_FIELDS)) {
+   const td=document.createElement('td'),input=document.createElement('input'),message=document.createElement('span');
+   const isColor=field.endsWith('Color');input.type=isColor?'color':'text';
+   input.value=row[field]??LABEL_FIELDS[field];input.dataset.row=index;input.dataset.field=field;
+   if(!isColor){input.maxLength=200;input.placeholder='Quantity';}else{input.style='padding:3px;height:34px;cursor:pointer';}
+   input.setAttribute('aria-label',`Row ${index+1}: ${field.startsWith('ask')?'Ask':'Bid'} ${isColor?'label color':'quantity label'}`);
+   message.id=`error-${index}-${field}`;message.className='cell-error';input.setAttribute('aria-describedby',message.id);
+   td.append(input,message);tr.append(td);
+  }
+  body.append(tr);
+ });
+}
+const emptyRow = ()=>({...Object.fromEntries(FIELDS.map(key=>[key,''])),...LABEL_FIELDS});
 function focusCell(index,field) {document.querySelector(`input[data-row="${index}"][data-field="${field}"]`)?.focus();}
 function setStatus(message,isError=false) {$('status').textContent=message;$('status').classList.toggle('error',isError);}
 function updateButtons() {document.querySelectorAll('[data-output]').forEach(button=>button.disabled=!valid||busy);}
@@ -161,7 +189,7 @@ function buildSVG(data,options) {
  measureContext.font=`${font}px ${FONT}`;
  const measure=text=>measureContext.measureText(text).width;
  const priceWidth=Math.ceil(Math.max(...data.map(row=>measure(formatNumber(row.price))),font*1.6)+gap*1.5);
- const quantityWidth=Math.ceil(Math.max(...data.flatMap(row=>[measure(formatNumber(row.ask)),measure(formatNumber(row.bid))]),font*2));
+ const quantityWidth=Math.ceil(Math.max(...data.flatMap(row=>[measure(quantityLabel(row,'ask')),measure(quantityLabel(row,'bid'))]),font*2));
  const askLines=options.askTitle.split(/\r?\n/),bidLines=options.bidTitle.split(/\r?\n/);
  const titleWidth=Math.max(...[...askLines,...bidLines].map(measure),0);
  const sideWidth=Math.ceil(Math.max(barWidth+gap+quantityWidth,titleWidth+gap));
@@ -169,7 +197,7 @@ function buildSVG(data,options) {
  const titleHeight=Math.max(askLines.length,bidLines.length)*font*1.25;
  const top=Math.ceil(pad+titleHeight+20),height=Math.ceil(top+data.length*rowHeight+pad);
  const max=Math.max(...data.flatMap(row=>[row.ask,row.bid]),0)||1;
- const text=(x,y,value,anchor='middle')=>`<text x="${x}" y="${y}" text-anchor="${anchor}">${escapeXML(value)}</text>`;
+ const text=(x,y,value,anchor='middle',color=null)=>`<text x="${x}" y="${y}" text-anchor="${anchor}"${color?` fill="${escapeXML(color)}"`:''}>${escapeXML(value)}</text>`;
  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title"><title id="chart-title">Limit order book figure</title>`;
  if(options.background==='white') svg+=`<rect width="${width}" height="${height}" fill="#ffffff"/>`;
  svg+=`<g font-family="${escapeXML(FONT)}" font-size="${font}" font-weight="400" fill="#111111">`;
@@ -183,17 +211,21 @@ function buildSVG(data,options) {
    svg+=paintRect(left-w+outer,y,Math.max(0,w-inner-outer),barHeight,'ask',options);
    svg+=paintRect(left-w,y,outer,barHeight,'askHighlight',options);
    svg+=paintRect(left-inner,y,inner,barHeight,'askInnerHighlight',options);
-   svg+=text(left-barWidth-gap,cy+font*.35,formatNumber(row.ask),'end');
   }
+  if(quantityLabel(row,'ask')) svg+=text(left-barWidth-gap,cy+font*.35,quantityLabel(row,'ask'),'end',row.askLabelColor??'#111111');
   if(row.bid>0) {
    const w=row.bid/max*barWidth,outer=row.bidHighlight/max*barWidth,inner=row.bidInnerHighlight/max*barWidth;
    svg+=paintRect(right+inner,y,Math.max(0,w-inner-outer),barHeight,'bid',options);
    svg+=paintRect(right+w-outer,y,outer,barHeight,'bidHighlight',options);
    svg+=paintRect(right,y,inner,barHeight,'bidInnerHighlight',options);
-   svg+=text(right+barWidth+gap,cy+font*.35,formatNumber(row.bid),'start');
   }
+  if(quantityLabel(row,'bid')) svg+=text(right+barWidth+gap,cy+font*.35,quantityLabel(row,'bid'),'start',row.bidLabelColor??'#111111');
  });
  return {svg:svg+'</g></svg>',width,height};
+}
+function quantityLabel(row,side) {
+ const custom=(row[`${side}Label`]??'').trim().replace(/\s+/g,' ');
+ return custom || (row[side]>0?formatNumber(row[side]):'');
 }
 function paintRect(x,y,width,height,part,options) {
  if (!(width>0)) return '';
@@ -234,7 +266,14 @@ async function exportPNG(copy) {
  } catch(error) {setStatus(copy?'Could not copy the image. Use Save PNG and insert the file instead.':error.message,true);}
  finally {busy=false;updateButtons();}
 }
-$('rows').addEventListener('input',event=>{const input=event.target;if(!input.dataset.field)return;rows[Number(input.dataset.row)][input.dataset.field]=input.value;update();});
+function editCell(event) {
+ const input=event.target;if(!input.dataset.field)return;
+ rows[Number(input.dataset.row)][input.dataset.field]=input.value;
+ if(input.dataset.field==='price')renderLabelTable();
+ update();
+}
+$('rows').addEventListener('input',editCell);
+$('label-rows').addEventListener('input',editCell);
 $('rows').addEventListener('paste',event=>{
  const input=event.target;if(!input.dataset.field)return;
  const text=event.clipboardData?.getData('text/plain');if(!text || !/[\t\r\n]/.test(text))return;
@@ -263,19 +302,20 @@ for (const [part,label] of PAINTS) {
 for(const key of Object.keys(DEFAULTS)) $(key).addEventListener('input',()=>{settings[key]=$(key).value;update();});
 $('save-svg').addEventListener('click',()=>{if(!valid)return;download(new Blob([currentSVG],{type:'image/svg+xml;charset=utf-8'}),'order-book.svg');setStatus('SVG exported. It stays sharp at any size.');});
 $('save-png').addEventListener('click',()=>exportPNG(false));$('copy-image').addEventListener('click',()=>exportPNG(true));
-$('save-project').addEventListener('click',()=>{if(!valid)return;download(new Blob([JSON.stringify({version:2,rows,settings},null,2)],{type:'application/json'}),'order-book.json');setStatus('Project saved. Use Open project to edit it again.');});
+$('save-project').addEventListener('click',()=>{if(!valid)return;download(new Blob([JSON.stringify({version:3,rows,settings},null,2)],{type:'application/json'}),'order-book.json');setStatus('Project saved. Use Open project to edit it again.');});
 $('load-project').addEventListener('click',()=>$('file-input').click());
 $('file-input').addEventListener('change',async event=>{
  const file=event.target.files[0];if(!file)return;
  try {
   if(file.size>5000000)throw new Error('Choose a file no larger than 5 MB.');
   const project=JSON.parse(await file.text());
-  if(![1,2].includes(project.version) || !Array.isArray(project.rows) || !project.rows.length || typeof project.settings!=='object' || project.settings===null)throw new Error('Choose a JSON project saved by this tool.');
+  if(![1,2,3].includes(project.version) || !Array.isArray(project.rows) || !project.rows.length || typeof project.settings!=='object' || project.settings===null)throw new Error('Choose a JSON project saved by this tool.');
   if(project.rows.length>MAX_ROWS)throw new Error('Order data is limited to 1,000 rows.');
   const incoming=project.rows.map(row=>{
    const required=project.version===1?LEGACY_FIELDS:FIELDS;
    if(!row||typeof row!=='object'||required.some(key=>!['string','number'].includes(typeof row[key])))throw new Error('Invalid order data format.');
-   return Object.fromEntries(FIELDS.map(key=>[key,String(project.version===1&&!LEGACY_FIELDS.includes(key)?'':row[key])]));
+   if(Object.keys(LABEL_FIELDS).some(key=>row[key]!==undefined&&typeof row[key]!=='string'))throw new Error('Invalid quantity label format.');
+   return {...Object.fromEntries(FIELDS.map(key=>[key,String(project.version===1&&!LEGACY_FIELDS.includes(key)?'':row[key])])),...Object.fromEntries(Object.entries(LABEL_FIELDS).map(([key,fallback])=>[key,row[key]??fallback]))};
   });
   const options=Object.fromEntries(Object.keys(DEFAULTS).map(key=>[key,project.settings[key]??DEFAULTS[key]]));
   const problem=validateSettings(options);if(problem)throw new Error(problem);
